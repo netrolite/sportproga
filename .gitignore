@@ -39,3 +39,6 @@
 
 # debug information files
 *.dwo
+
+# ignore anything inside the bin directory anywhere in the project tree
+bin/
