@@ -1,38 +1,32 @@
 #include <fstream>
 #include <iostream>
 
-bool isDelimiter(char c) {
-  return c == ' ' || c == '\t' || c == '.' || c == ',' || c == ';' ||
-         c == ':' || c == '!' || c == '?' || c == '\n' || c == '\r';
-}
-
 int main() {
   std::ifstream file("input.txt");
 
-  long long charCount = 0;
-  long long wordCount = 0;
-  bool inWord = false;
-  char ch;
+  char text[1000000] = {};
+  file.read(text, 1000000);
+  int len = file.gcount();
 
-  while (file.get(ch)) {
-    bool delimiter = isDelimiter(ch);
-
-    if (!delimiter && (unsigned char)ch >= 32)
-      charCount++;
-
-    if (delimiter) {
-      inWord = false;
-    } else {
-      if (!inWord) {
-        wordCount++;
-        inWord = true;
-      }
-    }
+  char pattern[256];
+  int patternLen = 0;
+  file.seekg(0);
+  int i = 0;
+  while (text[i] != '\n' && text[i] != '\0') {
+    pattern[patternLen++] = text[i++];
   }
-
-  std::cout << charCount << " " << wordCount << '\n';
-
   file.close();
 
+  int count = 0;
+  for (int pos = 0; pos + patternLen <= len; ++pos) {
+    int j = 0;
+    while (j < patternLen && text[pos + j] == pattern[j])
+      j++;
+    bool match = j == patternLen;
+    if (match)
+      count++;
+  }
+
+  std::cout << count;
   return 0;
 }
