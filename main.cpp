@@ -9,19 +9,20 @@ bool isDelimiter(char c) {
 int main() {
   std::ifstream file("input.txt");
 
-  unsigned long long charCount = 0;
-  unsigned long long wordCount = 0;
+  long long charCount = 0;
+  long long wordCount = 0;
   bool inWord = false;
   char ch;
 
   while (file.get(ch)) {
-    if (ch >= 32)
+    bool delimiter = isDelimiter(ch);
+
+    if (!delimiter && (unsigned char)ch >= 32)
       charCount++;
 
-    if (isDelimiter(ch)) {
+    if (delimiter) {
       inWord = false;
     } else {
-      // new word
       if (!inWord) {
         wordCount++;
         inWord = true;
@@ -29,9 +30,9 @@ int main() {
     }
   }
 
-  file.close();
-
   std::cout << charCount << " " << wordCount << '\n';
+
+  file.close();
 
   return 0;
 }
