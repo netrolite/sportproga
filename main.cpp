@@ -1,65 +1,117 @@
+#include <cmath>
+#include <complex>
 #include <fstream>
 #include <iostream>
 
-typedef unsigned long long ull;
+using namespace std;
 
-struct Rect {
-  long long x, y, w, h;
-};
+typedef long long ll;
+typedef complex<double> cd;
 
-ull getGcd(ull a, ull b) {
-  while (b) {
-    a %= b;
-    ull temp = a;
-    a = b;
-    b = temp;
-  }
-  return a;
-}
+const double PI = acos(-1.0);
 
-long long my_max(long long a, long long b) { return (a > b) ? a : b; }
-long long my_min(long long a, long long b) { return (a < b) ? a : b; }
+void fft(cd *a, int n, bool shouldInvert) {
+  for (int i = 1, j = 0; i < n; i++) {
+    int bit = n >> 1;
 
-int main() {
-  std::ifstream file("input.txt");
+    for (; j & bit; bit >>= 1)
+      j ^= bit;
 
-  int N;
-  file >> N;
+    j |= bit;
 
-  // first rectangle
-  Rect r1;
-  file >> r1.x >> r1.y >> r1.w >> r1.h;
-  ull area1 = (ull)r1.w * (ull)r1.h;
-
-  std::cout << "1 1\n";
-
-  // remaining rectangles
-  for (int i = 0; i < N - 1; ++i) {
-    Rect r2;
-    file >> r2.x >> r2.y >> r2.w >> r2.h;
-    ull area2 = (ull)r2.w * (ull)r2.h;
-
-    long long intersectoinX1 = my_max(r1.x, r2.x);
-    long long intersectionX2 = my_min(r1.x + r1.w, r2.x + r2.w);
-
-    long long intersectionY1 = my_max(r1.y, r2.y);
-    long long intersectionY2 = my_min(r1.y + r1.h, r2.y + r2.h);
-
-    long long width = intersectionX2 - intersectoinX1;
-    long long height = intersectionY2 - intersectionY1;
-
-    if (width <= 0 || height <= 0) {
-      std::cout << "0 1\n";
-    } else {
-      ull area = (ull)width * (ull)height;
-      ull areaUnion = area1 + area2 - area;
-      ull gcd = getGcd(area, areaUnion);
-
-      std::cout << area / gcd << ' ' << areaUnion / gcd << '\n';
+    if (i < j) {
+      cd tmp = a[i];
+      a[i] = a[j];
+      a[j] = tmp;
     }
   }
 
-  file.close();
+  for (int len = 2; len <= n; len <<= 1) {
+    double ang = 2 * PI / len * (shouldInvert ? -1 : 1);
+    cd wlen(cos(ang), sin(ang));
+    for (int i = 0; i < n; i += len) {
+      cd w(1);
+      for (int j = 0; j < len / 2; j++) {
+        cd u = a[i + j];
+        cd v = a[i + j + len / 2] * w;
+        a[i + j] = u + v;
+        a[i + j + len / 2] = u - v;
+        w *= wlen;
+      }
+    }
+  }
+
+  if (shouldInvert) {
+    for (int i = 0; i < n; i++)
+      a[i] /= n;
+  }
+}
+
+int main() {
+  std::ios::sync_with_stdio(false);
+  std::cin.tie(0);
+
+  std::ifstream in("input.txt");
+  std::ofstream out("output.txt");
+
+  int N;
+  in >> N;
+
+  int *A = new int[N];
+  for (int i = 0; i < N; i++)
+    in >> A[i];
+
+  int M;
+  in >> M;
+
+  int *B = new int[M];
+  for (int i = 0; i < M; i++)
+    in >> B[i];
+
+  int n = 1;
+  while (n < N + M)
+    n <<= 1;
+
+  cd *fa = new cd[n];
+  cd *fb = new cd[n];
+
+  for (int i = 0; i < n; i++) {
+    fa[i] = (i < N) ? cd(A[i], 0) : cd(0, 0);
+    fb[i] = (i < M) ? cd(B[i], 0) : cd(0, 0);
+  }
+
+  fft(fa, n, false);
+  fft(fb, n, false);
+
+  for (int i = 0; i < n; i++)
+    fa[i] *= fb[i];
+
+  fft(fa, n, true);
+
+  ll *Result = new ll[N + M];
+  for (int i = 0; i < N + M - 1; i++)
+    Result[i] = (ll)(fa[i].real() + 0.5);
+
+  int lastNonZeroIndex = 0;
+  for (int i = 0; i < N + M - 1; i++) {
+    if (Result[i] != 0)
+      lastNonZeroIndex = i;
+  }
+
+  for (int i = 0; i <= lastNonZeroIndex; i++) {
+    out << Result[i];
+    if (i < lastNonZeroIndex)
+      out << ' ';
+  }
+
+  delete[] A;
+  delete[] B;
+  delete[] fa;
+  delete[] fb;
+  delete[] Result;
+
+  in.close();
+  out.close();
 
   return 0;
 }
