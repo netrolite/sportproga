@@ -1,34 +1,29 @@
+#include <cstring>
 #include <fstream>
 
-static const char *const morseCodes[54] = {
-    ".-",     "-...",   "-.-.",   "-..",     ".",      "..-.",   "--.",
-    "....",   "..",     ".---",   "-.-",     ".-..",   "--",     "-.",
-    "---",    ".--.",   "--.-",   ".-.",     "...",    "-",      "..-",
-    "...-",   ".--",    "-..-",   "-.--",    "--..",   "-----",  ".----",
-    "..---",  "...--",  "....-",  ".....",   "-....",  "--...",  "---..",
-    "----.",  ".-.-.-", "--..--", "..--..",  ".----.", "-.-.--", "-..-.",
-    "-.--.",  "-.--.-", ".-...",  "---...",  "-.-.-.", "-...-",  ".-.-.",
-    "-....-", "..--.-", ".-..-.", "...-..-", ".--.-."};
+static const char *const morseCodes[55] = {
+    ".-",     "-...",   "-.-.",   "-..",     ".",      "..-.",     "--.",
+    "....",   "..",     ".---",   "-.-",     ".-..",   "--",       "-.",
+    "---",    ".--.",   "--.-",   ".-.",     "...",    "-",        "..-",
+    "...-",   ".--",    "-..-",   "-.--",    "--..",   "-----",    ".----",
+    "..---",  "...--",  "....-",  ".....",   "-....",  "--...",    "---..",
+    "----.",  ".-.-.-", "--..--", "..--..",  ".----.", "-.-.--",   "-..-.",
+    "-.--.",  "-.--.-", ".-...",  "---...",  "-.-.-.", "-...-",    ".-.-.",
+    "-....-", "..--.-", ".-..-.", "...-..-", ".--.-.", "...---..."};
 
-static const char *const symbols[54] = {
-    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",  "K", "L", "M", "N",
-    "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X",  "Y", "Z", "0", "1",
-    "2", "3", "4", "5", "6", "7", "8", "9", ".", ",",  "?", "'", "!", "/",
-    "(", ")", "&", ":", ";", "=", "+", "-", "_", "\"", "$", "@"};
+static const char *const symbols[55] = {
+    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",  "K", "L", "M",  "N",
+    "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X",  "Y", "Z", "0",  "1",
+    "2", "3", "4", "5", "6", "7", "8", "9", ".", ",",  "?", "'", "!",  "/",
+    "(", ")", "&", ":", ";", "=", "+", "-", "_", "\"", "$", "@", "SOS"};
 
-char toUpper(char ch) {
-  if ('a' <= ch && ch <= 'z')
-    return ch - 32;
-  return ch;
-}
+const char *morseToChar(const char *code) {
+  // if (code[0] == '\0')
+  //   return nullptr;
 
-const char *charToMorse(char c) {
-  char upper = toUpper(c);
-
-  for (int i = 0; i < 54; ++i) {
-    if (symbols[i][0] == upper) {
-      return morseCodes[i];
-    }
+  for (int i = 0; i < 55; ++i) {
+    if (strcmp(morseCodes[i], code) == 0)
+      return symbols[i];
   }
   return nullptr;
 }
@@ -38,35 +33,39 @@ int main() {
   std::ofstream out("output.txt");
 
   char ch;
-  bool isFirstWord = true;
-  bool inWord = false;
-  bool firstCharInWord = true;
+  char buffer[20];
+  int idx = 0;
+  int spaceCount = 0;
 
   while (in.get(ch)) {
-    if (ch == ' ') {
-      inWord = false;
-      continue;
-    }
-
-    const char *morseCode = charToMorse(ch);
-
-    if (morseCode != nullptr) {
-      if (!inWord) {
-        if (!isFirstWord) {
-          out << "   ";
-        }
-        inWord = true;
-        isFirstWord = false;
-        firstCharInWord = true;
-      }
-
-      if (!firstCharInWord) {
+    if (ch == '.' || ch == '-') {
+      // new word
+      if (spaceCount >= 3) {
         out << " ";
       }
 
-      out << morseCode;
-      firstCharInWord = false;
+      buffer[idx++] = ch;
+      buffer[idx] = '\0';
+      spaceCount = 0;
+    } else if (ch == ' ' || ch == '\n' || ch == '\r') {
+      if (idx > 0) {
+        const char *res = morseToChar(buffer);
+        if (res)
+          out << res;
+
+        idx = 0;
+        buffer[0] = '\0';
+      }
+
+      if (ch == ' ')
+        spaceCount++;
     }
+  }
+
+  if (idx > 0) {
+    const char *res = morseToChar(buffer);
+    if (res)
+      out << res;
   }
 
   in.close();
