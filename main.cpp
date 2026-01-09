@@ -1,37 +1,32 @@
 #include <fstream>
+#include <iostream>
 
 int main() {
-  std::ifstream in("input.txt");
-  std::ofstream out("output.txt");
+  std::ifstream file("input.txt");
 
-  char prev = 0;
-  char cur;
-
-  while (in.get(cur)) {
-    bool needUnderscore = false;
-
-    if (cur >= 'A' && cur <= 'Z') {
-      if ((prev >= 'A' && prev <= 'Z') || (prev >= 'a' && prev <= 'z') ||
-          (prev >= '0' && prev <= '9')) {
-        needUnderscore = true;
-      }
-    } else if (cur >= '0' && cur <= '9') {
-      if ((prev >= 'a' && prev <= 'z') || (prev >= 'A' && prev <= 'Z')) {
-        needUnderscore = true;
-      }
-    }
-
-    if (needUnderscore && prev != '_' && prev != 0)
-      out.put('_');
-
-    out.put(cur);
-    prev = cur;
+  int n;
+  file >> n;
+  if (file.eof()) {
+    std::cout << 0 << '\n';
+    return 0;
   }
 
-  out.put('\n');
+  long long maxSum = 0;
+  long long curSum = 0;
+  int el;
+  for (int i = 0; i < n; ++i) {
+    file >> el;
+    curSum += el;
 
-  in.close();
-  out.close();
+    if (curSum < 0)
+      curSum = 0;
 
+    if (maxSum < curSum)
+      maxSum = curSum;
+  }
+
+  std::cout << maxSum << '\n';
+
+  file.close();
   return 0;
 }
