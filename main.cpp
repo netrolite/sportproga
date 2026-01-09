@@ -1,58 +1,65 @@
 #include <fstream>
 #include <iostream>
 
-void destroy(long long *arr) {
-  if (arr != nullptr)
-    delete[] arr;
+typedef unsigned long long ull;
+
+struct Rect {
+  long long x, y, w, h;
+};
+
+ull getGcd(ull a, ull b) {
+  while (b) {
+    a %= b;
+    ull temp = a;
+    a = b;
+    b = temp;
+  }
+  return a;
 }
 
+long long my_max(long long a, long long b) { return (a > b) ? a : b; }
+long long my_min(long long a, long long b) { return (a < b) ? a : b; }
+
 int main() {
-  std::ifstream in("input.txt");
-  std::ofstream out("output.txt");
+  std::ifstream file("input.txt");
 
-  int n;
-  in >> n;
+  int N;
+  file >> N;
 
-  long long *poly1 = new long long[n];
-  for (int i = 0; i < n; ++i)
-    in >> poly1[i];
+  // first rectangle
+  Rect r1;
+  file >> r1.x >> r1.y >> r1.w >> r1.h;
+  ull area1 = (ull)r1.w * (ull)r1.h;
 
-  int m;
-  in >> m;
+  std::cout << "1 1\n";
 
-  long long *poly2 = new long long[m];
-  for (int i = 0; i < m; ++i)
-    in >> poly2[i];
+  // remaining rectangles
+  for (int i = 0; i < N - 1; ++i) {
+    Rect r2;
+    file >> r2.x >> r2.y >> r2.w >> r2.h;
+    ull area2 = (ull)r2.w * (ull)r2.h;
 
-  int reusltSize = n + m;
-  long long *result = new long long[reusltSize]();
+    long long intersectoinX1 = my_max(r1.x, r2.x);
+    long long intersectionX2 = my_min(r1.x + r1.w, r2.x + r2.w);
 
-  for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < m; ++j) {
-      result[i + j] += poly1[i] * poly2[j];
+    long long intersectionY1 = my_max(r1.y, r2.y);
+    long long intersectionY2 = my_min(r1.y + r1.h, r2.y + r2.h);
+
+    long long width = intersectionX2 - intersectoinX1;
+    long long height = intersectionY2 - intersectionY1;
+
+    if (width <= 0 || height <= 0) {
+      std::cout << "0 1\n";
+    } else {
+      ull area = (ull)width * (ull)height;
+      ull areaUnion = area1 + area2 - area;
+      ull gcd = getGcd(area, areaUnion);
+
+      std::cout << area / gcd << ' ' << areaUnion / gcd << '\n';
     }
   }
 
-  int printLen = 0;
-  for (int i = reusltSize - 1; i >= 0; --i) {
-    if (result[i] != 0) {
-      printLen = i + 1;
-      break;
-    }
-  }
-
-  for (int i = 0; i < printLen; ++i) {
-    out << result[i];
-    if (i < printLen - 1)
-      out << " ";
-  }
-
-  in.close();
-  out.close();
-
-  delete[] poly1;
-  delete[] poly2;
-  delete[] result;
+  file.close();
 
   return 0;
 }
