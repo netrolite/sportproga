@@ -1,32 +1,37 @@
 #include <fstream>
-#include <iostream>
 
 int main() {
-  std::ifstream file("input.txt");
+  std::ifstream in("input.txt");
+  std::ofstream out("output.txt");
 
-  char text[1000000] = {};
-  file.read(text, 1000000);
-  int len = file.gcount();
+  char prev = 0;
+  char cur;
 
-  char pattern[256];
-  int patternLen = 0;
-  file.seekg(0);
-  int i = 0;
-  while (text[i] != '\n' && text[i] != '\0') {
-    pattern[patternLen++] = text[i++];
+  while (in.get(cur)) {
+    bool needUnderscore = false;
+
+    if (cur >= 'A' && cur <= 'Z') {
+      if ((prev >= 'A' && prev <= 'Z') || (prev >= 'a' && prev <= 'z') ||
+          (prev >= '0' && prev <= '9')) {
+        needUnderscore = true;
+      }
+    } else if (cur >= '0' && cur <= '9') {
+      if ((prev >= 'a' && prev <= 'z') || (prev >= 'A' && prev <= 'Z')) {
+        needUnderscore = true;
+      }
+    }
+
+    if (needUnderscore && prev != '_' && prev != 0)
+      out.put('_');
+
+    out.put(cur);
+    prev = cur;
   }
-  file.close();
 
-  int count = 0;
-  for (int pos = 0; pos + patternLen <= len; ++pos) {
-    int j = 0;
-    while (j < patternLen && text[pos + j] == pattern[j])
-      j++;
-    bool match = j == patternLen;
-    if (match)
-      count++;
-  }
+  out.put('\n');
 
-  std::cout << count;
+  in.close();
+  out.close();
+
   return 0;
 }
